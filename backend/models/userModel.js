@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+import validator from "validator";
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -9,6 +10,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
+    validate: {
+      validator: validator.isEmail,
+      message: "invalid Email ID",
+    },
   },
   password: {
     type: String,
@@ -21,14 +26,14 @@ const userSchema = new mongoose.Schema({
   },
   profileImage: {
     type: String,
-    required: true,
+    // required: true,
   },
 });
 
-userSchema.pre("save", async (next) => {
-  if (!this.isModifield("password")) return next();
-  this.password = await bcrypt.hash(this.password, 10);
-  next();
+userSchema.pre("save", async function (params) {
+  if (this.isModified("password")) {
+    this.password = await bcrypt.hash(this.password, 10);
+  }
 });
 
 const userModel = mongoose.model("userModel", userSchema);
