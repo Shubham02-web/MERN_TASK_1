@@ -81,7 +81,6 @@ const userLogin = async (req, res) => {
 const getUser = async (req, res) => {
   try {
     const users = await userModel.find({}).select("-password");
-
     res.status(200).json({
       success: true,
       users,
@@ -91,4 +90,39 @@ const getUser = async (req, res) => {
   }
 };
 
-export { registerUser, userLogin, getUser };
+const updateUser = async (req, res) => {
+  try {
+    const { id, role, password, email, name } = req.body;
+    const user = await userModel.findById(id);
+    if (!user)
+      return res.json({
+        success: false,
+        message: "user not found for these id",
+      });
+    if (name) {
+      user.name = name;
+    }
+    if (email) {
+      user.email = email;
+    }
+    if (password) {
+      user.password = password;
+    }
+    if (role) {
+      user.role = role;
+    }
+    const updateduser = await user.save();
+    res.status(201).json({
+      success: true,
+      updateduser,
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.json({
+      success: false,
+      message: "error in update user API",
+    });
+  }
+};
+
+export { registerUser, userLogin, getUser, updateUser };
