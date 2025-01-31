@@ -1,6 +1,7 @@
 import userModel from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import JWT from "jsonwebtoken";
+import fs from "fs";
 const registerUser = async (req, res, next) => {
   try {
     const { role, email, password, name } = req.body;
@@ -9,12 +10,12 @@ const registerUser = async (req, res, next) => {
         success: false,
         message: "Please Enter All Fields",
       });
-    // const { profileImage } = req.file.filename;
-    // if (!profileImage)
-    //   return res.json({
-    //     success: false,
-    //     message: "please upload profileImage",
-    //   });
+    const profileImage = `${req.file.filename}`;
+    if (!profileImage)
+      return res.json({
+        success: false,
+        message: "please upload profileImage",
+      });
     const user = await userModel.findOne({ email });
     if (user)
       return res.status(400).json({
@@ -26,7 +27,7 @@ const registerUser = async (req, res, next) => {
       email,
       role,
       password,
-      //   profileImage,
+      profileImage,
     });
     await newUser.save();
     const token = JWT.sign({ name, email }, process.env.JWT_SECRET);
@@ -124,5 +125,39 @@ const updateUser = async (req, res) => {
     });
   }
 };
-
-export { registerUser, userLogin, getUser, updateUser };
+const updateUserProfile = async (req, res) => {
+  try {
+    const { id } = req.body;
+    const profileImage = `${req.file.filename}`;
+    const user = await userModel.findById(id);
+    if (!user)
+      return res.status(400).json({
+        success: false,
+        message: "User not fount for these ID",
+      });
+    if (!profileImage)
+      return res.json({
+        success: false,
+        message: "please upload new image",
+      });
+    fs.unlink("uploads/" + user.profileImage, async () => {
+      console.log("image deleted");
+    });
+    if (profileImage) {
+      user.profileImage = profileImage;
+      console.log("profileImage updated succesfully");
+    }
+    await user.save();
+    return res.status(201).json({
+      success: true,
+      message: "profile updated succesfully",
+    });
+  } catch (error) {
+    console.log(error.message);
+    return res.json({
+      success: false,
+      message: `error in update user profile :  ${error.message}`,
+    });
+  }
+};
+export { registerUser, userLogin, getUser, updateUser, updateUserProfile };

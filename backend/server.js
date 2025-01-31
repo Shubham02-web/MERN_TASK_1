@@ -7,8 +7,10 @@ dotenv.config();
 MongoConnect();
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 const port = process.env.PORT;
+app.use("/uploads", express.static("uploads"));
 
 app.use("/api/v1", userRoute);
 
