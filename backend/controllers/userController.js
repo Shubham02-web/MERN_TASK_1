@@ -30,7 +30,10 @@ const registerUser = async (req, res, next) => {
       profileImage,
     });
     await newUser.save();
-    const token = JWT.sign({ name, email }, process.env.JWT_SECRET);
+    const token = JWT.sign(
+      { id: newUser._id, name, email },
+      process.env.JWT_SECRET
+    );
     res.status(201).json({
       success: true,
       message: "User Registration done",
@@ -64,7 +67,10 @@ const userLogin = async (req, res) => {
       });
 
     const name = user.name;
-    const token = JWT.sign({ name, email }, process.env.JWT_SECRET);
+    const token = JWT.sign(
+      { id: user._id, name, email },
+      process.env.JWT_SECRET
+    );
     return res.status(200).json({
       success: true,
       message: "user Login Succesfully",
@@ -79,7 +85,7 @@ const userLogin = async (req, res) => {
   }
 };
 
-const getUser = async (req, res) => {
+const getUsers = async (req, res) => {
   try {
     const users = await userModel.find({}).select("-password");
     res.status(200).json({
@@ -129,16 +135,16 @@ const updateUserProfile = async (req, res) => {
   try {
     const { id } = req.body;
     const profileImage = `${req.file.filename}`;
+    if (!profileImage)
+      return res.status(400).json({
+        success: false,
+        message: "please upload pic",
+      });
     const user = await userModel.findById(id);
     if (!user)
       return res.status(400).json({
         success: false,
         message: "User not fount for these ID",
-      });
-    if (!profileImage)
-      return res.json({
-        success: false,
-        message: "please upload new image",
       });
     fs.unlink("uploads/" + user.profileImage, async () => {
       console.log("image deleted");
@@ -160,4 +166,62 @@ const updateUserProfile = async (req, res) => {
     });
   }
 };
-export { registerUser, userLogin, getUser, updateUser, updateUserProfile };
+
+const getUser = async (req, res) => {
+  try {
+    const { id } = req.body;
+    const user = await userModel.findById(id);
+    if (!user)
+      return res.status(400).json({
+        success: false,
+        message: "user not found for these id",
+      });
+    res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.json({
+      success: false,
+      message: `Error in get userAPI ${error.message}`,
+    });
+  }
+};
+const removeUser = async (req, res) => {
+  try {
+    const { id } = req.body;
+    const user = await userModel.findById(id);
+    if (!user)
+      return res.status(400).json({
+        success: false,
+        message: "user not found for these ID",
+      });
+    if (user.profileImage) {
+      fs.unlink("uploads/" + user.profileImage, () => {
+        console.log("user profile image delted succesfully");
+      });
+    }
+    await userModel.findByIdAndDelete({ _id: user._id });
+    res.status(200).json({
+      success: true,
+      message: "user deleted succesfully",
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.json({
+      success: false,
+      message: "Error in remove user API" + error.message,
+    });
+  }
+};
+
+export {
+  registerUser,
+  userLogin,
+  getUsers,
+  updateUser,
+  updateUserProfile,
+  getUser,
+  removeUser,
+};
