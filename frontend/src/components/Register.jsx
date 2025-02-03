@@ -26,7 +26,7 @@ const Register = () => {
       alert("user register succesfully");
       localStorage.setItem("token", res.data.token);
     } catch (error) {
-      console.log("error while registration" + error.message);
+      console.log("error while registration" + error);
     }
   };
   useEffect((res) => {

@@ -190,8 +190,9 @@ const getUser = async (req, res) => {
 };
 const removeUser = async (req, res) => {
   try {
-    const { id } = req.body;
-    const user = await userModel.findById(id);
+    console.log("params:", req.params);
+    const userId = req.params.userId;
+    const user = await userModel.findById(userId);
     if (!user)
       return res.status(400).json({
         success: false,
@@ -202,7 +203,7 @@ const removeUser = async (req, res) => {
         console.log("user profile image delted succesfully");
       });
     }
-    await userModel.findByIdAndDelete({ _id: user._id });
+    await userModel.findByIdAndDelete(user._id);
     res.status(200).json({
       success: true,
       message: "user deleted succesfully",

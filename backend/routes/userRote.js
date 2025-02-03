@@ -22,6 +22,6 @@ userRoute.put(
   updateUserProfile
 );
 userRoute.get("/single", authUser, getUser);
-userRoute.get("/", getUsers);
-userRoute.delete("/remove", authUser, removeUser);
+userRoute.get("/", authUser, isAdmin, getUsers);
+userRoute.delete("/remove/:userId", authUser, isAdmin, removeUser);
 export default userRoute;
